@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Checkpoint 1 - Registrazione</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    #reader { width: 300px; margin: auto; }
+    input { padding: 10px; font-size: 16px; width: 300px; }
+    button { padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>Checkpoint 1</h2>
+  <p>Scansiona il tuo QR personale</p>
+
+  <div id="reader"></div>
+  <p id="result">In attesa della scansione...</p>
+  <button onclick="invia()" disabled id="submitBtn">Invia registrazione</button>
+
+  <script>
+    let id_concorrente = "";
+    const checkpoint = "Checkpoint1";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbyRYvT8I52kyE1yGz615J_bbC6Kt7TZ8GyQzScCzhB9/dev";
+
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById("result").innerHTML = "✅ ID rilevato: " + decodedText;
+      id_concorrente = decodedText;
+      document.getElementById("submitBtn").disabled = false;
+      html5QrcodeScanner.clear();
+    }
+
+    function invia() {
+      if (!id_concorrente) return alert("Nessun ID rilevato");
+
+      const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
+                  "&checkpoint=" + encodeURIComponent(checkpoint);
+
+      fetch(url)
+        .then(r => r.text())
+        .then(txt => document.getElementById("result").innerHTML = txt)
+        .catch(err => alert("Errore nell'invio dati"));
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
