@@ -58,7 +58,12 @@ xec
               "&checkpoint=" + encodeURIComponent(checkpoint);
 
   fetch(url)
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Errore HTTP: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.status === "success") {
         document.getElementById("result").innerHTML = "✅ Passaggio registrato con successo!";
@@ -71,6 +76,7 @@ xec
       document.getElementById("result").innerHTML = "❌ Errore nell'invio dei dati.";
     });
 }
+
 
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
