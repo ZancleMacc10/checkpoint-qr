@@ -58,12 +58,14 @@ xec
               "&checkpoint=" + encodeURIComponent(checkpoint);
 
   fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Errore HTTP: ${response.status}`);
-      }
-      return response.json();
-    })
+  .then(response => {
+    if (!response.ok) {
+      // Se NON è ok (es. 404 o 500)
+      throw new Error("Errore HTTP: " + response.status);
+    }
+    return response.json();
+  })
+
     .then(data => {
       if (data.status === "success") {
         document.getElementById("result").innerHTML = "✅ Passaggio registrato con successo!";
