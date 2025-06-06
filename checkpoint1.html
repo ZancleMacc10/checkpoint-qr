@@ -51,26 +51,24 @@ xec
       html5QrcodeScanner.clear();
     }
 
-    function invia() {
+   function invia() {
   if (!id_concorrente) return alert("Nessun ID rilevato");
 
   const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
               "&checkpoint=" + encodeURIComponent(checkpoint);
 
   fetch(url)
-  .then(response => {
-    if (!response.ok) {
-      // Se NON è ok (es. 404 o 500)
-      throw new Error("Errore HTTP: " + response.status);
-    }
-    return response.json();
-  })
-
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("HTTP error " + response.status);
+      }
+      return response.json(); // ⬅️ ATTENZIONE: .json() qui è fondamentale
+    })
     .then(data => {
       if (data.status === "success") {
         document.getElementById("result").innerHTML = "✅ Passaggio registrato con successo!";
       } else {
-        document.getElementById("result").innerHTML = "⚠️ Errore nella risposta del server.";
+        document.getElementById("result").innerHTML = "⚠️ Risposta inattesa dal server.";
       }
     })
     .catch(error => {
@@ -78,7 +76,6 @@ xec
       document.getElementById("result").innerHTML = "❌ Errore nell'invio dei dati.";
     });
 }
-
 
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
