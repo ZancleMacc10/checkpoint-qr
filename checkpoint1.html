@@ -5,31 +5,30 @@ RANDO 100KM X 100 Eolici
   <title>Checkpoint 1 - Registrazione</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
-  body {
-    font-family: sans-serif;
-    text-align: center;
-    padding: 20px;
-    font-size: 18px; /* aumentato */
-  }
-  #reader {
-    width: 90%;
-    max-width: 400px;
-    margin: auto;
-  }
-  input {
-    padding: 12px;
-    font-size: 18px;
-    width: 90%;
-    max-width: 350px;
-    margin-bottom: 10px;
-  }
-  button {
-    padding: 14px 24px;
-    font-size: 18px;
-    margin-top: 10px;
-  }
-</style>
-
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      font-size: 18px;
+    }
+    #reader {
+      width: 90%;
+      max-width: 400px;
+      margin: auto;
+    }
+    input {
+      padding: 12px;
+      font-size: 18px;
+      width: 90%;
+      max-width: 350px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 14px 24px;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
   <h2>Checkpoint 1</h2>
@@ -51,32 +50,32 @@ RANDO 100KM X 100 Eolici
       html5QrcodeScanner.clear();
     }
 
-   function invia() {
-  if (!id_concorrente) return alert("Nessun ID rilevato");
+    function invia() {
+      if (!id_concorrente) return alert("Nessun ID rilevato");
 
-  const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
-              "&checkpoint=" + encodeURIComponent(checkpoint);
+      const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
+                  "&checkpoint=" + encodeURIComponent(checkpoint);
 
-  fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("HTTP error " + response.status);
-      }
-      return response.text(); // ✅ Cambiato da .json() a .text()
-    })
-    .then(text => {
-      console.log("Risposta server:", text);
-      if (text.includes("success")) {
-        document.getElementById("result").innerHTML = "✅ Passaggio registrato con successo!";
-      } else {
-        document.getElementById("result").innerHTML = "⚠️ Risposta inattesa dal server.";
-      }
-    })
-    .catch(error => {
-      console.error("Errore:", error);
-      document.getElementById("result").innerHTML = "❌ Errore nell'invio dei dati.";
-    });
-}
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+          }
+          return response.text(); // ✅ use text() instead of json()
+        })
+        .then(text => {
+          console.log("Risposta server:", text);
+          if (text.includes("success")) {
+            document.getElementById("result").innerHTML = "✅ Passaggio registrato con successo!";
+          } else {
+            document.getElementById("result").innerHTML = "⚠️ Risposta inattesa dal server.";
+          }
+        })
+        .catch(error => {
+          console.error("Errore:", error);
+          document.getElementById("result").innerHTML = "❌ Errore nell'invio dei dati.";
+        });
+    }
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader", { fps: 10, qrbox: 250 });
