@@ -62,10 +62,11 @@ RANDO 100KM X 100 Eolici
       if (!response.ok) {
         throw new Error("HTTP error " + response.status);
       }
-      return response.json(); // ⬅️ ATTENZIONE: .json() qui è fondamentale
+      return response.text(); // ✅ Cambiato da .json() a .text()
     })
-    .then(data => {
-      if (data.status === "success") {
+    .then(text => {
+      console.log("Risposta server:", text);
+      if (text.includes("success")) {
         document.getElementById("result").innerHTML = "✅ Passaggio registrato con successo!";
       } else {
         document.getElementById("result").innerHTML = "⚠️ Risposta inattesa dal server.";
@@ -76,7 +77,6 @@ RANDO 100KM X 100 Eolici
       document.getElementById("result").innerHTML = "❌ Errore nell'invio dei dati.";
     });
 }
-
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader", { fps: 10, qrbox: 250 });
