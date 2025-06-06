@@ -1,41 +1,65 @@
 RANDO 100KM X 100Eolici
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-  <title>Checkpoint 1 - Registrazione</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkpoint 1 - RANDO 100KM x 100 Eolici</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
       text-align: center;
-      padding: 40px;
-      font-size: 56px;
+      padding: 20px;
+    }
+    h2 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      color: #1a73e8;
+    }
+    p {
+      font-size: 22px;
+      margin-top: 0;
     }
     #reader {
-      width: 90%;
-      max-width: 400px;
-      margin: auto;
-    }
-    input {
-      padding: 18px;
-      font-size: 18px;
-      width: 90%;
-      max-width: 350px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 24px 44px;
-      font-size: 18px;
-      margin-top: 10px;
+      width: 100%;
+      max-width: 480px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      padding: 10px;
     }
     #reader__cameraSelection {
-    font-size: 32px;
-    padding: 16px;
-    width: 90%;
-    max-width: 400px;
-    margin: 20px auto;
-    display: block;
-  }
+      font-size: 22px;
+      padding: 14px;
+      width: 90%;
+      max-width: 400px;
+      margin: 20px auto;
+      display: block;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 16px 32px;
+      font-size: 20px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #result {
+      font-size: 20px;
+      margin-top: 20px;
+      color: #111;
+    }
   </style>
 </head>
 <body>
@@ -59,32 +83,29 @@ RANDO 100KM X 100Eolici
     }
 
     function invia () {
-  if (!id_concorrente) return alert("Nessun ID rilevato");
+      if (!id_concorrente) return alert("Nessun ID rilevato");
 
-  const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
-              "&checkpoint=" + encodeURIComponent(checkpoint);
+      const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
+                  "&checkpoint=" + encodeURIComponent(checkpoint);
 
-  fetch(url)                     // ← niente controllo CORS, è ok così
-    .then(r => r.text())         // leggiamo comunque il testo (se disponibile)
-    .then(txt => {
-      console.log("Risposta server:", txt);      // debug
-      // ✅ se contengo "success" ➜ ok
-      if (txt.includes("success") || txt === "") {
-        document.getElementById("result").innerHTML =
-          "✅ Passaggio registrato con successo!";
-      } else {
-        document.getElementById("result").innerHTML =
-          "⚠️ Risposta inattesa dal server, dati comunque inviati.";
-      }
-    })
-    .catch(err => {
-      console.error("Errore FETCH:", err);
-      // Con risposta opaque l’errore può scattare: consideriamolo comunque ok
-      document.getElementById("result").innerHTML =
-        "✅ Passaggio registrato.";
-    });
-}
-
+      fetch(url)
+        .then(r => r.text())
+        .then(txt => {
+          console.log("Risposta server:", txt);
+          if (txt.includes("success") || txt === "") {
+            document.getElementById("result").innerHTML =
+              "✅ Passaggio registrato con successo!";
+          } else {
+            document.getElementById("result").innerHTML =
+              "⚠️ Risposta inattesa dal server, dati comunque inviati.";
+          }
+        })
+        .catch(err => {
+          console.error("Errore FETCH:", err);
+          document.getElementById("result").innerHTML =
+            "✅ Passaggio registrato.";
+        });
+    }
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader", { fps: 10, qrbox: 250 });
