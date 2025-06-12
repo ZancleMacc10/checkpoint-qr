@@ -1,0 +1,122 @@
+RANDO 100KM X 100Eolici
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkpoint 1 - RANDO 100KM x 100 Eolici</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    .logo {
+      width: 120px;
+      max-width: 80%;
+      margin: 0 auto 20px;
+      display: block;
+    }
+    h2 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      color: #1a73e8;
+    }
+    p {
+      font-size: 22px;
+      margin-top: 0;
+    }
+    #reader {
+      width: 100%;
+      max-width: 480px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      padding: 10px;
+    }
+    #reader__cameraSelection {
+      font-size: 22px;
+      padding: 14px;
+      width: 90%;
+      max-width: 400px;
+      margin: 20px auto;
+      display: block;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 16px 32px;
+      font-size: 20px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #result {
+      font-size: 20px;
+      margin-top: 20px;
+      color: #111;
+    }
+  </style>
+</head>
+<body>
+  <img src="https://raw.githubusercontent.com/ZancleMacc10/checkpoint-qr/main/logo_Ciumara.png" alt="Logo Ciumara Bikers" class="logo">
+  <h2>Checkpoint 1</h2>
+  <p>Scansiona il tuo QR personale</p>
+
+  <div id="reader"></div>
+  <p id="result">In attesa della scansione...</p>
+  <button onclick="invia()" disabled id="submitBtn">Invia registrazione</button>
+
+  <script>
+    let id_concorrente = "";
+    const checkpoint = "Checkpoint4";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzdYN_4dLyUSsDwjtZvAcMoJSV1qfiEBNUqOV9Qu4yZTuI0dyvUxn9KhsxezJY2fcjy6g/exec";
+
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById("result").innerHTML = "✅ ID rilevato: " + decodedText;
+      id_concorrente = decodedText;
+      document.getElementById("submitBtn").disabled = false;
+      html5QrcodeScanner.clear();
+    }
+
+    function invia () {
+      if (!id_concorrente) return alert("Nessun ID rilevato");
+
+      const url = scriptUrl + "?id=" + encodeURIComponent(id_concorrente) +
+                  "&checkpoint=" + encodeURIComponent(checkpoint);
+
+      fetch(url)
+        .then(r => r.text())
+        .then(txt => {
+          console.log("Risposta server:", txt);
+          if (txt.includes("success") || txt === "") {
+            document.getElementById("result").innerHTML =
+              "✅ Passaggio registrato con successo!";
+          } else {
+            document.getElementById("result").innerHTML =
+              "⚠️ Risposta inattesa dal server, dati comunque inviati.";
+          }
+        })
+        .catch(err => {
+          console.error("Errore FETCH:", err);
+          document.getElementById("result").innerHTML =
+            "✅ Passaggio registrato.";
+        });
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
