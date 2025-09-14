@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gate • Timbrature</title>
+  <style>
+    :root { --bg:#0b0d10; --fg:#e7f6ff; --accent:#ffcc00; --ok:#7CFF6B; --dim:#8aa0b2; --panel:#11161c; --panel2:#0e141a; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      display: grid; grid-template-rows: auto 1fr;
+    }
+
+    /* ===== Banner superiore ===== */
+    .banner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px;
+      background: linear-gradient(90deg, #141a20, #1b222b); border-bottom: 2px solid var(--accent); }
+    .banner-left { display:flex; align-items:center; gap:14px; min-width:0; }
+    .event-title { font-weight:800; letter-spacing:.02em; font-size:clamp(20px,3.2vw,36px); white-space:nowrap; }
+    .powered { display:flex; align-items:center; gap:10px; color:var(--dim); font-size:clamp(12px,2vw,18px); white-space:nowrap; }
+    .logo { height:46px; width:auto; object-fit:contain; display:block; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+    .logo.small { height:28px; filter:none; }
+
+    /* ===== Contenuto ===== */
+    .wrap { width:min(1150px, 96vw); margin:22px auto; display:grid; gap:16px; }
+    .topline { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand-mini { font-weight:700; letter-spacing:.08em; color:var(--accent); font-size:14px; opacity:.9; }
+    #clock { font-size:clamp(28px,5vw,48px); font-weight:700; }
+    .blink::after { content: ":"; animation: blink 1s steps(2,end) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .panel { background:linear-gradient(180deg, var(--panel), var(--panel2)); border:1px solid #1e2a36;
+      border-radius:14px; padding:16px 18px; box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 -2px 0 rgba(255,255,255,.03); }
+    .grid { display:grid; gap:12px; grid-template-columns:1fr 1fr 1fr; }
+    .tile { background:linear-gradient(180deg, #141a20, #0e1216); border:1px solid #1e2a36; border-radius:12px; padding:16px 18px; min-height:90px; }
+    .label { font-size:12px; color:var(--dim); letter-spacing:.12em; text-transform:uppercase; }
+    .value { font-size:clamp(18px,3.2vw,28px); font-weight:700; margin-top:6px; }
+    .tile.span2 { grid-column:span 2; } .tile.span3 { grid-column:span 3; }
+    .ok { color:var(--ok); }
+
+    /* Effetti aggiornamento */
+    .flip { animation: flip .45s ease; }
+    @keyframes flip { 0%{ transform:rotateX(90deg); opacity:0; } 100%{ transform:rotateX(0deg); opacity:1; } }
+    .flash { animation: flash 1s ease; }
+    @keyframes flash { 0%{ box-shadow:0 0 0 0 rgba(255,204,0,.9); } 100%{ box-shadow:0 0 0 10px rgba(255,204,0,0); } }
+
+    /* Mappa principale */
+    .map-tile { display:grid; gap:8px; }
+    .map-embed iframe { width:100%; height:260px; border:0; border-radius:10px; box-shadow: inset 0 0 0 1px #1e2a36; }
+    .map-actions { display:flex; justify-content:flex-end; }
+    .map-actions a { color:var(--accent); text-decoration:none; font-weight:700; }
+    .map-actions a:hover { text-decoration:underline; }
+
+    /* Lista timbrature precedenti (scroll) + toolbar filtri */
+    .section-title { font-size:16px; letter-spacing:.08em; color:var(--dim); text-transform:uppercase; margin-bottom:8px; display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .filters input[type="search"] { padding:8px 10px; border-radius:10px; border:1px solid #233140; background:#0d1319; color:var(--fg); min-width:220px; }
+    .filters select { padding:8px 10px; border-radius:10px; border:1px solid #233140; background:#0d1319; color:var(--fg); }
+    .list { --list-max-h: 380px; max-height: var(--list-max-h); overflow: auto; display: grid; gap: 8px; padding-right: 6px; }
+    .row {
+      display:grid; gap:10px; align-items:center;
+      grid-template-columns: 140px 1fr 140px 120px 110px;
+      padding:10px 12px; border:1px dashed #233140; border-radius:10px; background:#0e141a;
+    }
+    .row .when { color:var(--fg); font-weight:700; }
+    .row .name { color:var(--fg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .row .id { color:var(--dim); font-weight:700; }
+    .row .coords { color:var(--dim); }
+    .row a { color:var(--accent); text-decoration:none; font-weight:700; }
+    .row a:hover { text-decoration:underline; }
+    .list::-webkit-scrollbar { width: 10px; }
+    .list::-webkit-scrollbar-thumb { background:#253445; border-radius:8px; }
+    .list::-webkit-scrollbar-track { background:#0d1319; border-radius:8px; }
+
+    .footer { color:var(--dim); font-size:14px; display:flex; justify-content:space-between; }
+
+    /* Pulsante audio */
+    .audio-btn { border:1px solid #233140; background:#0d1319; color:var(--fg); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; }
+    .audio-on { border-color:#2e7d32; box-shadow:0 0 0 2px rgba(46,125,50,.25) inset; }
+    .audio-btn:disabled { opacity:.6; cursor:not-allowed; }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr 1fr; }
+      .tile.span3{ grid-column:span 2; }
+      .row { grid-template-columns: 140px 1fr 100px 1fr; }
+      .row .coords{ display:none; }
+      .map-embed iframe { height:220px; }
+    }
+    @media (max-width: 600px){
+      .row { grid-template-columns: 120px 1fr 90px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== Banner superiore ===== -->
+  <div class="banner">
+    <div class="banner-left">
+      <span class="event-title" id="event-title">Nome Manifestazione</span>
+    </div>
+    <div class="powered">
+      Powered by
+      <img id="logo-powered" class="logo small" src="" alt="Ciumara Bikers" />
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="topline">
+      <div class="brand-mini">✈︎ GATE DISPLAY • TIMBRATURE</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button id="audio-toggle" class="audio-btn" title="Abilita/Disabilita avviso sonoro">🔕 Audio OFF</button>
+        <div id="clock">--<span class="blink"></span>--<span class="blink"></span>--</div>
+      </div>
+    </div>
+
+    <!-- ===== Pannello: Ultima timbratura ===== -->
+    <div id="panel-latest" class="panel">
+      <div class="grid">
+        <div class="tile span2">
+          <div class="label">Partecipante</div>
+          <div id="v-nome" class="value">—</div>
+        </div>
+        <div class="tile">
+          <div class="label">ID</div>
+          <div id="v-id" class="value">—</div>
+        </div>
+
+        <div class="tile">
+          <div class="label">Ultima timbratura (locale)</div>
+          <div id="v-ora" class="value">—</div>
+        </div>
+        <div class="tile">
+          <div class="label">Da UTC</div>
+          <div id="v-utcago" class="value">—</div>
+        </div>
+        <div class="tile">
+          <div class="label">Stato</div>
+          <div id="v-stato" class="value ok">OK</div>
+        </div>
+
+        <div class="tile">
+          <div class="label">Latitudine</div>
+          <div id="v-lat" class="value">—</div>
+        </div>
+        <div class="tile">
+          <div class="label">Longitudine</div>
+          <div id="v-lon" class="value">—</div>
+        </div>
+
+        <!-- Mappa PRINCIPALE -->
+        <div class="tile span3 map-tile">
+          <div class="label">Mappa (Google)</div>
+          <div class="map-embed">
+            <iframe id="gmap-embed" src="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+          </div>
+          <div class="map-actions">
+            <a id="map-link" href="#" target="_blank" rel="noopener">Apri in Maps ↗︎</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Pannello: Timbrature precedenti (scroll + filtri) ===== -->
+    <div class="panel">
+      <div class="section-title">
+        <span>Timbrature precedenti</span>
+        <div class="filters">
+          <input id="filter-q" type="search" placeholder="Cerca per nome o ID…" />
+          <label for="limit-n" style="color:var(--dim);">Mostra ultime</label>
+          <select id="limit-n">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="all">Tutte</option>
+          </select>
+        </div>
+      </div>
+      <div id="listPrev" class="list"></div>
+    </div>
+
+    <div class="footer">
+      <div id="status">Inizializzazione…</div>
+      <div>Refresh: <span id="refresh-ms">—</span> • Fuso: Europe/Rome</div>
+    </div>
+  </div>
+
+  <script>
+    // ======== CONFIG ========
+    const EVENT_NAME  = "100 km × 100 Eolici";
+    const LOGO_URL    = ""; // URL logo Ciumara (raw GitHub) opzionale
+    const WEBAPP_URL  = "https://script.google.com/macros/s/AKfycbzmEMXBNMvYdQDYAMeTK-APmzyzzrX_eRbk-HD7AfKxA620NGgiSCvNmtKwhw9ni7oH1g/exec";
+    const REFRESH_MS  = 5000;
+    const TZ          = "Europe/Rome";
+    const LIST_MAX_HEIGHT = 380; // px
+    // ========================
+
+    // Init banner + labels
+    document.getElementById("event-title").textContent = EVENT_NAME;
+    const logoPowered = document.getElementById("logo-powered");
+    if (LOGO_URL) logoPowered.src = LOGO_URL; else logoPowered.style.display = "none";
+    document.getElementById("refresh-ms").textContent = (REFRESH_MS/1000) + "s";
+    document.getElementById("listPrev").style.setProperty("--list-max-h", LIST_MAX_HEIGHT + "px");
+
+    const el = {
+      clock:  document.getElementById("clock"),
+      status: document.getElementById("status"),
+      panelLatest: document.getElementById("panel-latest"),
+      nome:   document.getElementById("v-nome"),
+      id:     document.getElementById("v-id"),
+      ora:    document.getElementById("v-ora"),
+      utcago: document.getElementById("v-utcago"),
+      stato:  document.getElementById("v-stato"),
+      lat:    document.getElementById("v-lat"),
+      lon:    document.getElementById("v-lon"),
+      mapA:   document.getElementById("map-link"),
+      gmap:   document.getElementById("gmap-embed"),
+      list:   document.getElementById("listPrev"),
+      q:      document.getElementById("filter-q"),
+      limit:  document.getElementById("limit-n"),
+      audioBtn: document.getElementById("audio-toggle"),
+    };
+
+    // Orologio
+    function updateClock(){
+      const now = new Date();
+      const hh = now.toLocaleTimeString("it-IT",{hour12:false,timeZone:TZ});
+      el.clock.innerHTML = hh.replace(/:/g,'<span class="blink"></span>');
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // Audio (WebAudio) — richiede interazione utente per sbloccare l’audio
+    let audioEnabled = false;
+    let audioCtx = null;
+    function initAudio(){
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+    function beep(){
+      if (!audioEnabled || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // La5
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.26);
+    }
+    el.audioBtn.addEventListener("click", () => {
+      initAudio();
+      audioEnabled = !audioEnabled;
+      el.audioBtn.textContent = audioEnabled ? "🔔 Audio ON" : "🔕 Audio OFF";
+      el.audioBtn.classList.toggle("audio-on", audioEnabled);
+    });
+
+    // Utils
+    function timeAgo(dt){
+      const s = Math.max(0, Math.floor((Date.now() - dt.getTime())/1000));
+      if (s < 60) return `${s}s fa`;
+      const m = Math.floor(s/60); if (m < 60) return `${m}m fa`;
+      const h = Math.floor(m/60); return `${h}h ${m%60}m fa`;
+    }
+    function fmtLocal(dt){
+      return dt.toLocaleString("it-IT", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+    }
+    function num6(x){ return (isFinite(x) ? Number(x).toFixed(6) : "—"); }
+    function flip(n){ n.classList.remove("flip"); void n.offsetWidth; n.classList.add("flip"); }
+    function flash(n){ n.classList.remove("flash"); void n.offsetWidth; n.classList.add("flash"); }
+
+    function normalize(r){
+      return {
+        nome: (r.Nome ?? "").toString(),
+        cognome: (r.Cognome ?? "").toString(),
+        id: r.IDConcorrente ?? "—",
+        lat: Number(r.latitudine),
+        lon: Number(r.longitudine),
+        ts: new Date(r.Timestamp)
+      };
+    }
+
+    function renderLatest(last){
+      const fullName = `${last.nome} ${last.cognome}`.trim() || "—";
+      el.nome.textContent = fullName; flip(el.nome);
+      el.id.textContent   = last.id;  flip(el.id);
+      el.ora.textContent  = fmtLocal(last.ts); flip(el.ora);
+      el.utcago.textContent = timeAgo(last.ts); flip(el.utcago);
+      el.lat.textContent = num6(last.lat); flip(el.lat);
+      el.lon.textContent = num6(last.lon); flip(el.lon);
+
+      if (isFinite(last.lat) && isFinite(last.lon)) {
+        const gUrl = `https://www.google.com/maps?q=${last.lat},${last.lon}&z=18`;
+        el.mapA.href = gUrl;
+        el.gmap.src  = `${gUrl}&output=embed`;
+      } else {
+        el.mapA.href = "#";
+        el.gmap.src = "";
+      }
+    }
+
+    // Stato per confronto “nuova timbratura”
+    let lastSeenTs = null;
+    let prevAllRows = []; // cache per filtri
+
+    function renderPrevList(items){
+      el.list.innerHTML = "";
+      // Filtri
+      const q = (el.q.value || "").trim().toLowerCase();
+      let lim = el.limit.value === "all" ? Infinity : parseInt(el.limit.value, 10);
+
+      let filtered = items;
+      if (q) {
+        filtered = filtered.filter(it => {
+          const name = `${it.nome} ${it.cognome}`.toLowerCase();
+          return name.includes(q) || String(it.id).toLowerCase().includes(q);
+        });
+      }
+      if (Number.isFinite(lim)) filtered = filtered.slice(0, lim);
+
+      for (const it of filtered){
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const when = document.createElement("div");
+        when.className = "when";
+        when.textContent = it.ts.toLocaleTimeString("it-IT", { timeZone: TZ, hour12: false }) + "  " +
+                           it.ts.toLocaleDateString("it-IT", { timeZone: TZ });
+
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = `${it.nome} ${it.cognome}`.trim() || "—";
+
+        const id = document.createElement("div");
+        id.className = "id";
+        id.textContent = it.id;
+
+        const coords = document.createElement("div");
+        coords.className = "coords";
+        coords.textContent = `${num6(it.lat)}, ${num6(it.lon)}`;
+
+        const link = document.createElement("a");
+        link.href = (isFinite(it.lat) && isFinite(it.lon)) ? `https://www.google.com/maps?q=${it.lat},${it.lon}&z=18` : "#";
+        link.target = "_blank"; link.rel = "noopener";
+        link.textContent = "Apri in Maps";
+
+        row.appendChild(when); row.appendChild(name); row.appendChild(id); row.appendChild(coords); row.appendChild(link);
+        el.list.appendChild(row);
+      }
+    }
+
+    async function loadData(){
+      try{
+        el.status.textContent = "Aggiornamento…";
+        const res = await fetch(`${WEBAPP_URL}?t=${Date.now()}`, { cache: "no-store" });
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw = await res.json();
+        if(!Array.isArray(raw) || !raw.length){ el.status.textContent = "Nessun dato disponibile."; return; }
+
+        const rows = raw.map(normalize).filter(r => !isNaN(r.ts.getTime()));
+        if (!rows.length){ el.status.textContent = "Nessun record valido."; return; }
+        rows.sort((a,b) => a.ts - b.ts);
+
+        // Ultima timbratura
+        const latest = rows[rows.length - 1];
+        renderLatest(latest);
+
+        // Beep + flash se nuova
+        const latestTsVal = latest.ts.getTime();
+        if (lastSeenTs !== null && latestTsVal > lastSeenTs) {
+          flash(el.panelLatest);
+          beep();
+        }
+        lastSeenTs = latestTsVal;
+
+        // Tutte le precedenti (recente -> vecchia)
+        prevAllRows = rows.slice(0, -1).reverse();
+        renderPrevList(prevAllRows);
+
+        el.status.textContent = `Ultimo aggiornamento: ${new Date().toLocaleTimeString("it-IT",{hour12:false,timeZone:TZ})}`;
+        el.stato.textContent = "OK"; el.stato.classList.add("ok");
+      }catch(err){
+        console.error(err);
+        el.status.textContent = `Errore: ${err.message}`;
+        el.stato.textContent = "ERRORE"; el.stato.classList.remove("ok");
+      }
+    }
+
+    // Filtri live
+    el.q.addEventListener("input", () => renderPrevList(prevAllRows));
+    el.limit.addEventListener("change", () => renderPrevList(prevAllRows));
+
+    loadData();
+    setInterval(loadData, REFRESH_MS);
+  </script>
+</body>
+</html>
+
